@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-import '../constant_functions.dart';
+import '../config/config.dart';
 
 class HomeScreen extends StatelessWidget {
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -21,12 +20,11 @@ class HomeScreen extends StatelessWidget {
           ),
           IconButton(
             onPressed: () async {
-              await auth.signOut();
               kNavigate(context, 'chat');
             },
             icon: const Icon(
               Icons.message,
-              color: Colors.red,
+              color: Colors.white,
             ),
           ),
         ],

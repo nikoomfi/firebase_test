@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'package:bubble/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:p_08_firebase/constants.dart';
+import '../config/config.dart';
+import '../widgets/widgets.dart';
+
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -11,19 +15,27 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  TextEditingController controller = TextEditingController();
   FirebaseFirestore fireStore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
-  late CollectionReference messageRef;
+  CollectionReference messageRef =
+      FirebaseFirestore.instance.collection('Messages');
+  TextEditingController controller = TextEditingController();
+  ScrollController scrollController = ScrollController();
+
+  bool isEditing = false;
+  String updatingMessage = '';
+  String updatingMessageID = '';
 
   @override
   void initState() {
     super.initState();
-    messageRef = fireStore.collection('Messages');
   }
+
+  late Size size;
 
   @override
   Widget build(BuildContext context) {
+    size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat Screen'),
@@ -31,51 +43,141 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: messageRef.snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasData) {
-                  
-                } //
-                else {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+              ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: messageRef
+                    .orderBy('date', descending: true)
+                    .orderBy('time', descending: true)
+                    .snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData) {
+                    return ListView(
+                      reverse: true,
+                      controller: scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: snapshot.data!.docs.map(
+                        (doc) {
+                          String id = doc.id;
+                          Map data = doc.data() as Map;
+                          bool isMe = data['sender'] == auth.currentUser!.uid;
+                          return GestureDetector(
+                            onTap: () {
+                              onMessageTapped(data, id);
+                            },
+                            child: Bubble(
+                              margin: BubbleEdges.only(
+                                  top: 10,
+                                  left: isMe ? 10 : 0,
+                                  right: !isMe ? 10 : 0),
+                              nip: (isMe)
+                                  ? BubbleNip.rightTop
+                                  : BubbleNip.leftTop,
+                              color: (isMe)
+                                  ? Colors.green[100]
+                                  : Colors.blue[100],
+                              alignment: (isMe)
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft,
+                              child: Text(data['text']),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                    );
+                  } //
+                  else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
             ),
           ),
-          Row(
-            children: [
-              const SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  decoration: kMyInputDecoration.copyWith(
-                    hintText: 'Type your message...',
+          const SizedBox(
+            height: 10,
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            padding: const EdgeInsets.only(top: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Visibility(
+                    visible: isEditing,
+                    child: Container(
+                      width: size.width - 65,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 3),
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(225, 255, 199, 1),
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(4),
+                          topLeft: Radius.circular(4),
+                        ),
+                      ),
+                      child: Text(updatingMessage),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                width: 5,
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.send,
-                  color: Colors.blue,
+                const SizedBox(
+                  height: 2,
                 ),
-                onPressed: sendMessage,
-              ),
-            ],
+                Row(
+                  children: [
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        minLines: 1,
+                        maxLines: 5,
+                        onTap: () {
+                          Timer(
+                            const Duration(milliseconds: 300),
+                            () {
+                              scrollController.jumpTo(
+                                  scrollController.position.minScrollExtent);
+                            },
+                          );
+                        },
+                        controller: controller,
+                        decoration: kMyInputDecoration.copyWith(
+                          hintText: 'Type your message...',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.send,
+                        color: Colors.blue,
+                      ),
+                      onPressed: sendMessage,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 5,
           ),
         ],
       ),
     );
   }
 
-  void sendMessage() {
+  void sendMessage() async {
     String text = controller.text;
     print(text);
     if (text.length <= 2) {
@@ -85,8 +187,65 @@ class _ChatScreenState extends State<ChatScreen> {
 
     Map<String, dynamic> newMap = Map();
     newMap['text'] = text;
-    newMap['time'] = DateTime.now();
+    String dateTime = DateTime.now().toString();
+    String date = dateTime.substring(0, 10);
+    String time = dateTime.substring(11, 19);
+    newMap['time'] = time;
+    newMap['date'] = date;
+    // edit
+    if (isEditing == true) {
+      DocumentReference doc = messageRef.doc(updatingMessageID);
+      doc.update({
+        'text': text,
+      });
+    } // add
+    else {
+      newMap['sender'] = auth.currentUser!.uid;
+      newMap['sender_phone'] = auth.currentUser!.phoneNumber;
+      messageRef.add(newMap).then((value) {
+        print(value);
+      });
+    }
+    resetValues();
+  }
 
-    messageRef.add(newMap).then((value) => print(value));
+  onMessageTapped(Map data, String id) {
+    showDialog(
+      builder: (BuildContext context) {
+        return ChatDialog(
+          onDelete: () {
+            onDelete(data, id);
+          },
+          onEdit: () {
+            onEdit(data, id);
+          },
+        );
+      },
+      context: context,
+    );
+  }
+
+  onDelete(Map data, String id) async {
+    messageRef.doc(id).delete();
+    Navigator.pop(context);
+  }
+
+  onEdit(Map data, String id) async {
+    setState(() {
+      isEditing = true;
+      updatingMessage = data['text'];
+      controller.text = data['text'];
+      updatingMessageID = id;
+    });
+    Navigator.pop(context);
+  }
+
+  resetValues() {
+    controller.clear();
+    setState(() {
+      updatingMessageID = '';
+      updatingMessage = '';
+      isEditing = false;
+    });
   }
 }

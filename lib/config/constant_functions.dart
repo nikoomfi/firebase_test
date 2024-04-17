@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/chat_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
+import '../screens/screens.dart';
 
 kNavigate(BuildContext context, String path) {
   if (path == 'chat') {
