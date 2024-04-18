@@ -9,14 +9,16 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Screen'),
+        title: Text('Home Screen',style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.blue[900],
         actions: [
           IconButton(
             onPressed: () async {
               await auth.signOut();
               kNavigate(context, 'login');
             },
-            icon: const Icon(Icons.exit_to_app),
+            icon: const Icon(Icons.exit_to_app,
+              color: Colors.white,),
           ),
           IconButton(
             onPressed: () async {

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../config/config.dart';
 import '../widgets/widgets.dart';
 
-
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
 
@@ -38,8 +37,22 @@ class _ChatScreenState extends State<ChatScreen> {
     size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat Screen'),
-      ),
+          title: const Text(
+            'Chat Screen',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue[900],
+          leading: Builder(builder: (BuildContext) {
+            return IconButton(
+              onPressed: () async {
+                Navigator.pop(context);
+              },
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+              ),
+            );
+          })),
       body: Column(
         children: [
           Expanded(
@@ -75,9 +88,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               nip: (isMe)
                                   ? BubbleNip.rightTop
                                   : BubbleNip.leftTop,
-                              color: (isMe)
-                                  ? Colors.green[100]
-                                  : Colors.blue[100],
+                              color:
+                                  (isMe) ? Colors.amber[100] : Colors.brown[100],
                               alignment: (isMe)
                                   ? Alignment.topRight
                                   : Alignment.topLeft,
