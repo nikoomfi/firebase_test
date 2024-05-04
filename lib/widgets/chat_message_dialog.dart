@@ -11,7 +11,7 @@ class ChatDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      content: Row(
+      content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton.icon(

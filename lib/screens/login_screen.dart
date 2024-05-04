@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../config/config.dart';
-
+import '../constant_functions.dart';
+import '../constants.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -9,7 +9,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController phoneController = TextEditingController();
+  // TextEditingController phoneController = TextEditingController();
 
   TextEditingController valCodeController = TextEditingController();
 
@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String myVerificationId = '-1';
 
   FirebaseAuth auth = FirebaseAuth.instance;
+  String phoneField = '';
 
   @override
   void initState() {
@@ -36,8 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login',style: TextStyle(color: Colors.white),),
-        backgroundColor: Colors.blue[900],
+        title: const Text('Login'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -52,7 +52,10 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 height: 45,
                 child: TextField(
-                  controller: phoneController,
+                  // controller: phoneController,
+                  onChanged: (val){
+                    phoneField = val;
+                  },
                   decoration: kMyInputDecoration.copyWith(
                     hintText: 'Phone No.',
                   ),
@@ -89,7 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   onButtonPressed() async {
-    String phone = phoneController.text;
+    // String phone = phoneController.text;
+    String phone = phoneField;
     String code = valCodeController.text;
 
     // send code to phone

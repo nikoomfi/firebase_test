@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
-import '../screens/screens.dart';
+
+import 'screens/screens.dart';
 
 kNavigate(BuildContext context, String path) {
-  if (path == 'chat') {
+  if (path == 'chat' || path == 'sell') {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) {
-          return const ChatScreen();
+          if (path == 'chat') {
+            return const ChatScreen();
+          } else if (path == 'sell') {
+            return const SellScreen();
+          } else {
+            return HomeScreen();
+          }
         },
       ),
     );

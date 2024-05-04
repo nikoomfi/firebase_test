@@ -3,7 +3,7 @@ import 'package:bubble/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../config/config.dart';
+import '../constants.dart';
 import '../widgets/widgets.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -37,22 +37,8 @@ class _ChatScreenState extends State<ChatScreen> {
     size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            'Chat Screen',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.blue[900],
-          leading: Builder(builder: (BuildContext) {
-            return IconButton(
-              onPressed: () async {
-                Navigator.pop(context);
-              },
-              icon: Icon(
-                Icons.arrow_back_rounded,
-                color: Colors.white,
-              ),
-            );
-          })),
+        title: const Text('Chat Screen'),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -88,8 +74,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               nip: (isMe)
                                   ? BubbleNip.rightTop
                                   : BubbleNip.leftTop,
-                              color:
-                                  (isMe) ? Colors.amber[100] : Colors.brown[100],
+                              color: (isMe)
+                                  ? const Color.fromRGBO(225, 255, 199, 1)
+                                  : Colors.white,
                               alignment: (isMe)
                                   ? Alignment.topRight
                                   : Alignment.topLeft,
